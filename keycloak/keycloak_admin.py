@@ -45,12 +45,13 @@ class KeycloakAdmin:
 
     PAGE_SIZE = 100
 
-    def __init__(self, server_url, username, password, realm_name='master', client_id='admin-cli', verify=True, client_secret_key=None):
+    def __init__(self, server_url, username, password, totp=None, realm_name='master', client_id='admin-cli', verify=True, client_secret_key=None):
         """
 
         :param server_url: Keycloak server url
         :param username: admin username
         :param password: admin password
+        :param totp: mfa one time passcode
         :param realm_name: realm name
         :param client_id: client id
         :param verify: True if want check connection SSL
@@ -68,7 +69,12 @@ class KeycloakAdmin:
         grant_type = ["password"]
         if client_secret_key:
             grant_type = ["client_credentials"]
-        self._token = keycloak_openid.token(username, password, grant_type=grant_type)
+        
+        if totp:
+            self._token = keycloak_openid.token(username, password, totp=totp, grant_type=grant_type)
+        else:
+            self._token = keycloak_openid.token(username, password, grant_type=grant_type)
+
         self._connection = ConnectionManager(base_url=server_url,
                                              headers={'Authorization': 'Bearer ' + self.token.get('access_token'),
                                                       'Content-Type': 'application/json'},
